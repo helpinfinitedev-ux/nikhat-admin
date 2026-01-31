@@ -12,6 +12,7 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
     customerName: "",
     rating: 0,
     description: "",
+    treatment: "",
     links: [],
     imageUrls: [],
   });
@@ -36,6 +37,7 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
   const handleClose = () => {
     setOpen(false);
     setFormData({
+      treatment: "",
       customerName: "",
       rating: 0,
       description: "",
@@ -58,6 +60,10 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
           <div className="grid w-full items-center gap-4">
             <Label htmlFor="rating">Rating</Label>
             <Input type="number" id="rating" placeholder="Rating" value={formData.rating} onChange={handleInputChange} name="rating" />
+          </div>
+          <div className="grid w-full items-center gap-4">
+            <Label htmlFor="treatment">Treatment</Label>
+            <Input type="text" id="treatment" placeholder="Treatment" value={formData.treatment} onChange={handleInputChange} name="treatment" />
           </div>
           <div className="grid w-full items-center gap-4">
             <Label htmlFor="description">Description</Label>

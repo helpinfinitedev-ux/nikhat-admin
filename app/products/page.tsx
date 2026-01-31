@@ -1,21 +1,24 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import AdminLayout from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, Plus } from "lucide-react";
+import { Loader2, Package, Plus } from "lucide-react";
 import ProductsList from "./_components/products-list";
 import { ProductsService } from "@/services/products.service";
 import { toast } from "sonner";
 import { IProduct } from "@/interfaces";
-import { ProductContext } from "@/context/products";
+import { ProductContext, useProducts } from "@/context/products";
+import { uploadImage } from "@/utils/firebase";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { categories } from "./_constants";
 
 export default function ProductsPage() {
-  const { products, loading } = useContext(ProductContext);
+  const { products, loading, setTrigger } = useProducts();
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<IProduct>({
     name: "",
@@ -24,21 +27,75 @@ export default function ProductsPage() {
     offer: 0,
     category: "",
     boughtQuantity: 0,
-    imageUrls: [],
+    imageUrls: [""],
     discountedPrice: 0,
   });
+  const [uploading, setUploading] = useState<Record<number, boolean>>({});
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value as string });
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "number" ? Number(value) : value,
+    }));
+  };
+
+  useEffect(() => {
+    const price = Number(formData.price) || 0;
+    const offer = Math.min(Math.max(Number(formData.offer) || 0, 0), 100);
+    const discounted = offer > 0 ? price - price * (offer / 100) : price;
+    const normalized = Number.isFinite(discounted) ? Number(discounted.toFixed(2)) : 0;
+    if (formData.discountedPrice !== normalized) {
+      setFormData((prev) => ({ ...prev, discountedPrice: normalized }));
+    }
+  }, [formData.price, formData.offer, formData.discountedPrice]);
+
+  const handleImageUrlChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const nextUrls = [...(prev.imageUrls || [])];
+      nextUrls[index] = value;
+      return { ...prev, imageUrls: nextUrls };
+    });
+  };
+
+  const addImageField = () => {
+    setFormData((prev) => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ""] }));
+  };
+
+  const removeImageField = (index: number) => {
+    setFormData((prev) => {
+      const nextUrls = [...(prev.imageUrls || [])];
+      nextUrls.splice(index, 1);
+      return { ...prev, imageUrls: nextUrls.length ? nextUrls : [""] };
+    });
+  };
+
+  const handleImageUpload = async (index: number, file?: File | null) => {
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [index]: true }));
+    try {
+      const url = (await uploadImage(file)) as string;
+      handleImageUrlChange(index, url);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading((prev) => ({ ...prev, [index]: false }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const [response, error] = await ProductsService.createProduct(formData);
-    setLoading(true);
+    const payload = {
+      ...formData,
+      imageUrls: (formData.imageUrls || []).map((url) => url.trim()).filter(Boolean),
+    };
+    const [response, error] = await ProductsService.createProduct(payload);
     if (error) {
       toast.error(error.message);
     } else {
       toast.success("Product created successfully");
+      setTrigger((prev: boolean) => !prev);
     }
     setOpen(false);
     setFormData({
@@ -48,7 +105,7 @@ export default function ProductsPage() {
       offer: 0,
       category: "",
       boughtQuantity: 0,
-      imageUrls: [],
+      imageUrls: [""],
       discountedPrice: 0,
     });
   };
@@ -83,16 +140,12 @@ export default function ProductsPage() {
                   <Textarea id="description" placeholder="Enter product description" rows={3} value={formData.description} onChange={handleInputChange} name="description" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price</Label>
-                    <Input id="price" type="number" placeholder="0.00" step="0.01" value={formData.price} onChange={handleInputChange} name="price" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="discountedPrice">Discounted Price</Label>
-                    <Input id="discountedPrice" type="number" placeholder="0.00" step="0.01" value={formData.discountedPrice} onChange={handleInputChange} name="discountedPrice" />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price</Label>
+                  <Input id="price" type="number" placeholder="0.00" step="0.01" value={formData.price} onChange={handleInputChange} name="price" />
+                  <p className="text-sm text-gray-500">
+                    Discounted price: <span className="font-medium text-gray-900">{formData.discountedPrice}</span>
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,12 +162,41 @@ export default function ProductsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Input id="category" placeholder="Enter category" value={formData.category} onChange={handleInputChange} name="category" />
+                  <Select value={formData.category} onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="imageUrls">Image URLs</Label>
-                  <Textarea id="imageUrls" placeholder="Enter image URLs (one per line)" rows={3} value={formData.imageUrls.join("\n")} onChange={handleInputChange} name="imageUrls" />
+                  <div className="flex items-center justify-between gap-3">
+                    <Label>Image Links</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addImageField}>
+                      Add Image
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {(formData.imageUrls || [""]).map((url, index) => (
+                      <div key={index} className="flex flex-col gap-2 md:flex-row md:items-center">
+                        <Input placeholder="https://example.com/image.jpg" value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} />
+                        <div className="flex items-center gap-2">
+                          <Input type="file" accept="image/*" className="w-full md:w-[220px]" disabled={!!uploading[index]} onChange={(e) => handleImageUpload(index, e.target.files?.[0])} />
+                          {uploading[index] && <Loader2 className="h-4 w-4 animate-spin text-gray-500" />}
+                          <Button type="button" variant="outline" size="sm" onClick={() => removeImageField(index)}>
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">

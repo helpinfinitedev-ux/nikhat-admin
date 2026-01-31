@@ -1,13 +1,15 @@
 "use client";
 import { IProduct } from "@/interfaces";
 import { ProductsService } from "@/services/products.service";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export const ProductContext = createContext<
   | {
       products: IProduct[];
       setProducts: (products: IProduct[]) => void;
       loading: boolean;
+      trigger: boolean;
+      setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
     }
   | undefined
 >(undefined);
@@ -15,7 +17,7 @@ export const ProductContext = createContext<
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [trigger, setTrigger] = useState(false);
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -29,5 +31,22 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     };
     fetchProducts();
   }, []);
-  return <ProductContext.Provider value={{ products, setProducts, loading }}>{children}</ProductContext.Provider>;
+
+  const value = {
+    products,
+    setProducts,
+    loading,
+    trigger,
+    setTrigger,
+  };
+
+  return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;
+};
+
+export const useProducts = () => {
+  const context = useContext(ProductContext);
+  if (!context) {
+    throw new Error("useProducts must be used within a ProductProvider");
+  }
+  return context;
 };
