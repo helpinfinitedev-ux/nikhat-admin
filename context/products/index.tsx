@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 export const ProductContext = createContext<
   | {
       products: IProduct[];
-      setProducts: (products: IProduct[]) => void;
+      setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;
       loading: boolean;
       trigger: boolean;
       setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
@@ -30,7 +30,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       setLoading(false);
     };
     fetchProducts();
-  }, []);
+  }, [trigger]);
 
   const value = {
     products,

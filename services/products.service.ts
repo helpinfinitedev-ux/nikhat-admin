@@ -10,4 +10,10 @@ export const ProductsService = {
   createProduct: async (product: IProduct) => {
     return await Promisable.asPromise(http.post("/api/products", product));
   },
+  updateProduct: async (id: string, product: IProduct) => {
+    return await Promisable.asPromise(http.put(`/api/products/${id}`, product));
+  },
+  deleteProduct: async (id: string) => {
+    return await Promisable.asPromise(http.delete(`/api/products/${id}`));
+  },
 };
