@@ -1,12 +1,12 @@
 "use client";
 import { ICustomerRating } from "@/interfaces";
 import { TestimonialsService } from "@/services/testimonials.service";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export const TestimonialContext = createContext<
   | {
       testimonials: ICustomerRating[];
-      setTestimonials: (testimonials: ICustomerRating[]) => void;
+      setTestimonials: React.Dispatch<React.SetStateAction<ICustomerRating[]>>;
       loading: boolean;
     }
   | undefined
@@ -31,4 +31,12 @@ export const TestimonialProvider = ({ children }: { children: React.ReactNode })
   }, []);
 
   return <TestimonialContext.Provider value={{ testimonials, setTestimonials, loading }}>{children}</TestimonialContext.Provider>;
+};
+
+export const useTestimonials = () => {
+  const context = useContext(TestimonialContext);
+  if (!context) {
+    throw new Error("useTestimonials must be used within a TestimonialProvider");
+  }
+  return context;
 };

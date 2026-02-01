@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Calendar, Link as LinkIcon } from "lucide-react";
 import { ICustomerRating } from "@/interfaces";
 import { useContext, useState } from "react";
-import { TestimonialContext } from "@/context/testimonials";
+import { TestimonialContext, useTestimonials } from "@/context/testimonials";
 import { Button } from "@/components/ui/button";
 import AddTestimonialModal from "./_components/add-testimonial-modal";
 import DateService from "@/utils/date";
 
 export default function TestimonialsPage() {
-  const { testimonials, loading } = useContext(TestimonialContext);
+  const { testimonials, loading } = useTestimonials();
   const [open, setOpen] = useState(false);
   if (loading) {
     return <div>Loading...</div>;
