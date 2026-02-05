@@ -5,9 +5,27 @@ import React, { useContext } from "react";
 import { Button } from "../../../../components/ui/button";
 import DateService from "@/utils/date";
 import { FileText, Loader2 } from "lucide-react";
+import { BlogService } from "@/services/blog.service";
+import { toast } from "sonner";
 
 const BlogsList = () => {
-  const { blogs, loading, currentBlog, setCurrentBlog, setOpenCreateBlog } = useContext(BlogsContext);
+  const { blogs, loading, currentBlog, setCurrentBlog, setOpenCreateBlog, setBlogs } = useContext(BlogsContext);
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this blog?");
+    if (!confirmed) return;
+
+    const [, error] = await BlogService.deleteBlog(id);
+    if (error) {
+      toast.error(error.message || "Failed to delete blog");
+      return;
+    }
+
+    setBlogs(blogs.filter((blog) => blog._id !== id));
+    if (currentBlog?._id === id) setOpenCreateBlog(false);
+    toast.success("Blog deleted successfully");
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
@@ -69,7 +87,9 @@ const BlogsList = () => {
                       }}>
                       Edit
                     </Button>
-                    <Button variant="destructive">Delete</Button>
+                    <Button variant="destructive" onClick={() => handleDelete(blog._id)}>
+                      Delete
+                    </Button>
                   </div>
                 </td>
               </tr>

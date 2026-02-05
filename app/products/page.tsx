@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categories } from "./_constants";
 
 export default function ProductsPage() {
-  const { products, loading, setTrigger } = useProducts();
+  const { products, loading, setTrigger, fetchProducts } = useProducts();
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<IProduct>({
     name: "",

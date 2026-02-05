@@ -71,18 +71,15 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
           </div>
           <div className="grid w-full items-center gap-4">
             <Label htmlFor="links">Links</Label>
-            <Input type="text" id="links" placeholder="Links" value={formData.links.join(",")} onChange={handleInputChange} name="links" />
-            <Button variant="outline" onClick={handleAddLink}>
-              Add Link
-            </Button>
+            <Input type="text" id="links" placeholder="Links" value={formData.links} onChange={handleInputChange} name="links" />
           </div>
-          <div className="grid w-full items-center gap-4">
+          {/* <div className="grid w-full items-center gap-4">
             <Label htmlFor="imageUrls">Image URLs</Label>
             <Input type="text" id="imageUrls" placeholder="Image URLs" value={formData.imageUrls.join(",")} onChange={handleInputChange} name="imageUrls" />
             <Button variant="outline" onClick={handleAddImageUrl}>
               Add Image URL
             </Button>
-          </div>
+          </div> */}
           <Button onClick={handleSubmit}>Add Testimonial</Button>
         </div>
       </DialogContent>

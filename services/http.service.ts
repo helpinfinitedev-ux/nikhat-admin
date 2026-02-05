@@ -21,9 +21,6 @@ axios.interceptors.response.use(
   (err) => {
     const { message: msg, response } = err;
     const message = response?.data?.message;
-
-    toast.error(message || msg || "Operation failed");
-
     if (!response) throw err;
 
     const code = response.data.statusCode;
@@ -48,7 +45,7 @@ const http = {
   patch: axios.patch,
   delete: axios.delete,
   setJWT: () => {
-    axios.defaults.headers.common.Authorization = localStorage.getItem("adminToken") || "";
+    axios.defaults.headers.common.Authorization = "Bearer " + localStorage.getItem("adminToken") || "";
   },
   setMultiPart: () => ({ headers: { "Content-Type": "multipart/form-data" } }),
 };

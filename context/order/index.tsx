@@ -23,17 +23,17 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [trigger, setTrigger] = useState(false);
+  const fetchOrders = async () => {
+    setLoading(true);
+    const [response, error] = await OrderService.getOrders();
+    if (error) {
+      console.error("Error fetching orders:", error.message);
+    } else {
+      setOrders(response?.data?.data || []);
+    }
+    setLoading(false);
+  };
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      const [response, error] = await OrderService.getOrders();
-      if (error) {
-        console.error("Error fetching orders:", error.message);
-      } else {
-        setOrders(response?.data?.data || []);
-      }
-      setLoading(false);
-    };
     fetchOrders();
   }, [trigger]);
   return <OrderContext.Provider value={{ orders, setOrders, loading, trigger, setTrigger }}>{children}</OrderContext.Provider>;

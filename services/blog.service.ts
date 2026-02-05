@@ -12,4 +12,7 @@ export const BlogService = {
   updateBlog: async (id: string, blog: Omit<IBlog, "_id" | "createdAt" | "updatedAt">) => {
     return await Promisable.asPromise(http.patch(`/api/blogs/${id}`, blog));
   },
+  deleteBlog: async (id: string) => {
+    return await Promisable.asPromise(http.delete(`/api/blogs/${id}`));
+  },
 };

@@ -4,15 +4,82 @@ import AdminLayout from "@/components/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Calendar, Link as LinkIcon } from "lucide-react";
 import { ICustomerRating } from "@/interfaces";
-import { useContext, useState } from "react";
-import { TestimonialContext, useTestimonials } from "@/context/testimonials";
+import { useState } from "react";
+import { useTestimonials } from "@/context/testimonials";
 import { Button } from "@/components/ui/button";
 import AddTestimonialModal from "./_components/add-testimonial-modal";
 import DateService from "@/utils/date";
+import { TestimonialsService } from "@/services/testimonials.service";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function TestimonialsPage() {
-  const { testimonials, loading } = useTestimonials();
+  const { testimonials, loading, setTestimonials } = useTestimonials();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Omit<ICustomerRating, "_id" | "createdAt" | "updatedAt">>({
+    customerName: "",
+    rating: 0,
+    description: "",
+    links: [],
+    imageUrls: [],
+    treatment: "",
+  });
+
+  const parseCsv = (value: string) =>
+    value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const openEditModal = (testimonial: ICustomerRating) => {
+    setEditingId(testimonial._id || null);
+    setFormData({
+      customerName: testimonial.customerName || "",
+      rating: testimonial.rating || 0,
+      description: testimonial.description || "",
+      links: testimonial.links || [],
+      imageUrls: testimonial.imageUrls || [],
+      treatment: testimonial.treatment || "",
+    });
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    const payload = {
+      ...formData,
+      rating: Number(formData.rating),
+    };
+    const [response, error] = await TestimonialsService.updateRating(editingId, payload);
+    if (error) {
+      toast.error(error.message || "Failed to update testimonial");
+      return;
+    }
+    const updated = response?.data?.data as ICustomerRating;
+    setTestimonials((prev) => prev.map((item) => (item._id === editingId ? updated : item)));
+    toast.success("Testimonial updated successfully");
+    setEditOpen(false);
+    setEditingId(null);
+  };
+
+  const handleDelete = async (testimonial: ICustomerRating) => {
+    if (!testimonial._id) return;
+    const confirmed = window.confirm("Delete this testimonial?");
+    if (!confirmed) return;
+    const [, error] = await TestimonialsService.deleteRating(testimonial._id);
+    if (error) {
+      toast.error(error.message || "Failed to delete testimonial");
+      return;
+    }
+    setTestimonials((prev) => prev.filter((item) => item._id !== testimonial._id));
+    toast.success("Testimonial deleted successfully");
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -42,6 +109,14 @@ export default function TestimonialsPage() {
                         ))}
                       </div>
                     </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openEditModal(testimonial)}>
+                        Edit
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(testimonial)}>
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -70,6 +145,61 @@ export default function TestimonialsPage() {
         )}
       </div>
       <AddTestimonialModal open={open} setOpen={setOpen} />
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Testimonial</DialogTitle>
+            <DialogDescription>Update testimonial details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="customerName">Name</Label>
+              <Input id="customerName" value={formData.customerName} onChange={(e) => setFormData((prev) => ({ ...prev, customerName: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rating">Rating</Label>
+              <Input
+                id="rating"
+                type="number"
+                min={0}
+                max={5}
+                value={formData.rating}
+                onChange={(e) => setFormData((prev) => ({ ...prev, rating: Number(e.target.value) }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="treatment">Treatment</Label>
+              <Input id="treatment" value={formData.treatment} onChange={(e) => setFormData((prev) => ({ ...prev, treatment: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" value={formData.description} onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="links">Links (comma separated)</Label>
+              <Input
+                id="links"
+                value={formData.links.join(", ")}
+                onChange={(e) => setFormData((prev) => ({ ...prev, links: parseCsv(e.target.value) }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="imageUrls">Image URLs (comma separated)</Label>
+              <Input
+                id="imageUrls"
+                value={formData.imageUrls.join(", ")}
+                onChange={(e) => setFormData((prev) => ({ ...prev, imageUrls: parseCsv(e.target.value) }))}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdate}>Save Changes</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

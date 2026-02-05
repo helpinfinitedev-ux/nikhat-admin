@@ -10,6 +10,7 @@ export const ProductContext = createContext<
       loading: boolean;
       trigger: boolean;
       setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
+      fetchProducts: () => Promise<void>;
     }
   | undefined
 >(undefined);
@@ -18,26 +19,27 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [trigger, setTrigger] = useState(false);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const [response, error] = await ProductsService.getProducts();
+    if (error) {
+      console.error("Error fetching products:", error.message);
+    } else {
+      setProducts(response?.data?.data || []);
+    }
+    setLoading(false);
+  };
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      const [response, error] = await ProductsService.getProducts();
-      if (error) {
-        console.error("Error fetching products:", error.message);
-      } else {
-        setProducts(response?.data?.data || []);
-      }
-      setLoading(false);
-    };
     fetchProducts();
   }, [trigger]);
-
   const value = {
     products,
     setProducts,
     loading,
     trigger,
     setTrigger,
+    fetchProducts,
   };
 
   return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;
