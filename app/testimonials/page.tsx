@@ -2,7 +2,7 @@
 
 import AdminLayout from "@/components/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Calendar, Link as LinkIcon } from "lucide-react";
+import { Star, Calendar, Link as LinkIcon, Plus, X } from "lucide-react";
 import { ICustomerRating } from "@/interfaces";
 import { useState } from "react";
 import { useTestimonials } from "@/context/testimonials";
@@ -30,12 +30,6 @@ export default function TestimonialsPage() {
     treatment: "",
   });
 
-  const parseCsv = (value: string) =>
-    value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
   const openEditModal = (testimonial: ICustomerRating) => {
     setEditingId(testimonial._id || null);
     setFormData({
@@ -49,11 +43,51 @@ export default function TestimonialsPage() {
     setEditOpen(true);
   };
 
+  const handleAddLink = () => {
+    setFormData((prev) => ({ ...prev, links: [...prev.links, ""] }));
+  };
+
+  const handleLinkChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const newLinks = [...prev.links];
+      newLinks[index] = value;
+      return { ...prev, links: newLinks };
+    });
+  };
+
+  const handleRemoveLink = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      links: prev.links.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddImageUrl = () => {
+    setFormData((prev) => ({ ...prev, imageUrls: [...prev.imageUrls, ""] }));
+  };
+
+  const handleImageUrlChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const newImageUrls = [...prev.imageUrls];
+      newImageUrls[index] = value;
+      return { ...prev, imageUrls: newImageUrls };
+    });
+  };
+
+  const handleRemoveImageUrl = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleUpdate = async () => {
     if (!editingId) return;
     const payload = {
       ...formData,
       rating: Number(formData.rating),
+      links: formData.links.filter((link) => link.trim() !== ""),
+      imageUrls: formData.imageUrls.filter((url) => url.trim() !== ""),
     };
     const [response, error] = await TestimonialsService.updateRating(editingId, payload);
     if (error) {
@@ -146,7 +180,7 @@ export default function TestimonialsPage() {
       </div>
       <AddTestimonialModal open={open} setOpen={setOpen} />
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Testimonial</DialogTitle>
             <DialogDescription>Update testimonial details</DialogDescription>
@@ -175,21 +209,54 @@ export default function TestimonialsPage() {
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" value={formData.description} onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))} />
             </div>
+            {/* Links Section */}
             <div className="space-y-2">
-              <Label htmlFor="links">Links (comma separated)</Label>
-              <Input
-                id="links"
-                value={formData.links.join(", ")}
-                onChange={(e) => setFormData((prev) => ({ ...prev, links: parseCsv(e.target.value) }))}
-              />
+              <div className="flex items-center justify-between">
+                <Label>Links</Label>
+                <Button type="button" variant="outline" size="sm" onClick={handleAddLink}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Link
+                </Button>
+              </div>
+              {formData.links.length === 0 && <p className="text-sm text-gray-500">No links added yet</p>}
+              {formData.links.map((link, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    type="url"
+                    placeholder="https://example.com"
+                    value={link}
+                    onChange={(e) => handleLinkChange(index, e.target.value)}
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveLink(index)}>
+                    <X className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
             </div>
+
+            {/* Image URLs Section */}
             <div className="space-y-2">
-              <Label htmlFor="imageUrls">Image URLs (comma separated)</Label>
-              <Input
-                id="imageUrls"
-                value={formData.imageUrls.join(", ")}
-                onChange={(e) => setFormData((prev) => ({ ...prev, imageUrls: parseCsv(e.target.value) }))}
-              />
+              <div className="flex items-center justify-between">
+                <Label>Image URLs</Label>
+                <Button type="button" variant="outline" size="sm" onClick={handleAddImageUrl}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Image URL
+                </Button>
+              </div>
+              {formData.imageUrls.length === 0 && <p className="text-sm text-gray-500">No image URLs added yet</p>}
+              {formData.imageUrls.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    value={url}
+                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveImageUrl(index)}>
+                    <X className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditOpen(false)}>
