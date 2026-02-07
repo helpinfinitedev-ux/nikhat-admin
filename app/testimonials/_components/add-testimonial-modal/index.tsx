@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TestimonialsService } from "@/services/testimonials.service";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
+import { useTestimonials } from "@/context/testimonials";
 
 const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
   const [formData, setFormData] = useState<Omit<ICustomerRating, "date">>({
@@ -18,6 +19,7 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
     links: [],
     imageUrls: [],
   });
+  const { trigger, setTrigger } = useTestimonials();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,6 +69,7 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
       setOpen(false);
     } else {
       setOpen(false);
+      setTrigger((prev) => !prev);
       toast.success("Testimonial created successfully");
     }
   };
@@ -120,12 +123,7 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
             {formData.links.length === 0 && <p className="text-sm text-gray-500">No links added yet</p>}
             {formData.links.map((link, index) => (
               <div key={index} className="flex items-center gap-2">
-                <Input
-                  type="url"
-                  placeholder="https://example.com"
-                  value={link}
-                  onChange={(e) => handleLinkChange(index, e.target.value)}
-                />
+                <Input type="url" placeholder="https://example.com" value={link} onChange={(e) => handleLinkChange(index, e.target.value)} />
                 <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveLink(index)}>
                   <X className="h-4 w-4 text-red-500" />
                 </Button>
@@ -145,12 +143,7 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
             {formData.imageUrls.length === 0 && <p className="text-sm text-gray-500">No image URLs added yet</p>}
             {formData.imageUrls.map((url, index) => (
               <div key={index} className="flex items-center gap-2">
-                <Input
-                  type="url"
-                  placeholder="https://example.com/image.jpg"
-                  value={url}
-                  onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                />
+                <Input type="url" placeholder="https://example.com/image.jpg" value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} />
                 <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveImageUrl(index)}>
                   <X className="h-4 w-4 text-red-500" />
                 </Button>

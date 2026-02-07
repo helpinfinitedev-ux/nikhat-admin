@@ -8,6 +8,8 @@ export const TestimonialContext = createContext<
       testimonials: ICustomerRating[];
       setTestimonials: React.Dispatch<React.SetStateAction<ICustomerRating[]>>;
       loading: boolean;
+      trigger: boolean;
+      setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
     }
   | undefined
 >(undefined);
@@ -15,6 +17,7 @@ export const TestimonialContext = createContext<
 export const TestimonialProvider = ({ children }: { children: React.ReactNode }) => {
   const [testimonials, setTestimonials] = useState<ICustomerRating[]>([]);
   const [loading, setLoading] = useState(true);
+  const [trigger, setTrigger] = useState(false);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -28,9 +31,9 @@ export const TestimonialProvider = ({ children }: { children: React.ReactNode })
       setLoading(false);
     };
     fetchTestimonials();
-  }, []);
+  }, [trigger]);
 
-  return <TestimonialContext.Provider value={{ testimonials, setTestimonials, loading }}>{children}</TestimonialContext.Provider>;
+  return <TestimonialContext.Provider value={{ testimonials, setTestimonials, trigger, setTrigger, loading }}>{children}</TestimonialContext.Provider>;
 };
 
 export const useTestimonials = () => {

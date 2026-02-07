@@ -192,14 +192,7 @@ export default function TestimonialsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="rating">Rating</Label>
-              <Input
-                id="rating"
-                type="number"
-                min={0}
-                max={5}
-                value={formData.rating}
-                onChange={(e) => setFormData((prev) => ({ ...prev, rating: Number(e.target.value) }))}
-              />
+              <Input id="rating" type="number" min={0} max={5} value={formData.rating} onChange={(e) => setFormData((prev) => ({ ...prev, rating: Number(e.target.value) }))} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="treatment">Treatment</Label>
@@ -221,12 +214,7 @@ export default function TestimonialsPage() {
               {formData.links.length === 0 && <p className="text-sm text-gray-500">No links added yet</p>}
               {formData.links.map((link, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <Input
-                    type="url"
-                    placeholder="https://example.com"
-                    value={link}
-                    onChange={(e) => handleLinkChange(index, e.target.value)}
-                  />
+                  <Input type="url" placeholder="https://example.com" value={link} onChange={(e) => handleLinkChange(index, e.target.value)} />
                   <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveLink(index)}>
                     <X className="h-4 w-4 text-red-500" />
                   </Button>
@@ -246,12 +234,7 @@ export default function TestimonialsPage() {
               {formData.imageUrls.length === 0 && <p className="text-sm text-gray-500">No image URLs added yet</p>}
               {formData.imageUrls.map((url, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <Input
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    value={url}
-                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                  />
+                  <Input type="url" placeholder="https://example.com/image.jpg" value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} />
                   <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveImageUrl(index)}>
                     <X className="h-4 w-4 text-red-500" />
                   </Button>
