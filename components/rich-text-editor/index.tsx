@@ -52,7 +52,7 @@ const Editor = ({ onChange, initialContent, editable }: EditorProps) => {
 
   return (
     <div className="my-editor flex justify-center items-center">
-      <BlockNoteView className=" overflow-hidden max-w-[1124px]! h-auto" style={{ maxWidth: "1024px" }} editable={editable || false} onChange={onEditorChange} editor={editor} theme={"light"} />
+      <BlockNoteView className=" overflow-hidden min-w-[1124px]! h-auto" style={{ minWidth: "1024px" }} editable={editable || false} onChange={onEditorChange} editor={editor} theme={"light"} />
     </div>
   );
 };
