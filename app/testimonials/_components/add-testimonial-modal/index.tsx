@@ -30,7 +30,9 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
     const [response, error] = await TestimonialsService.createRating(formData);
     if (error) {
       toast.error(error.message);
+      setOpen(false);
     } else {
+      setOpen(false);
       toast.success("Testimonial created successfully");
     }
   };
@@ -73,13 +75,13 @@ const AddTestimonialModal = ({ open, setOpen }: { open: boolean; setOpen: (open:
             <Label htmlFor="links">Links</Label>
             <Input type="text" id="links" placeholder="Links" value={formData.links} onChange={handleInputChange} name="links" />
           </div>
-          {/* <div className="grid w-full items-center gap-4">
+          <div className="grid w-full items-center gap-4">
             <Label htmlFor="imageUrls">Image URLs</Label>
             <Input type="text" id="imageUrls" placeholder="Image URLs" value={formData.imageUrls.join(",")} onChange={handleInputChange} name="imageUrls" />
             <Button variant="outline" onClick={handleAddImageUrl}>
               Add Image URL
             </Button>
-          </div> */}
+          </div>
           <Button onClick={handleSubmit}>Add Testimonial</Button>
         </div>
       </DialogContent>
