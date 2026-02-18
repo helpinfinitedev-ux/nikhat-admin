@@ -2,7 +2,7 @@
 
 import AdminLayout from "@/components/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Calendar, Link as LinkIcon, Plus, X } from "lucide-react";
+import { Star, Calendar, Link as LinkIcon, Plus, X, Loader2 } from "lucide-react";
 import { ICustomerRating } from "@/interfaces";
 import { useState } from "react";
 import { useTestimonials } from "@/context/testimonials";
@@ -15,12 +15,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadImage } from "@/utils/firebase";
 
 export default function TestimonialsPage() {
   const { testimonials, loading, setTestimonials } = useTestimonials();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<Record<number, boolean>>({});
   const [formData, setFormData] = useState<Omit<ICustomerRating, "_id" | "createdAt" | "updatedAt">>({
     customerName: "",
     rating: 0,
@@ -79,6 +81,20 @@ export default function TestimonialsPage() {
       ...prev,
       imageUrls: prev.imageUrls.filter((_, i) => i !== index),
     }));
+  };
+
+  const handleImageUpload = async (index: number, file?: File | null) => {
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [index]: true }));
+    try {
+      const url = (await uploadImage(file)) as string;
+      handleImageUrlChange(index, url);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading((prev) => ({ ...prev, [index]: false }));
+    }
   };
 
   const handleUpdate = async () => {
@@ -225,19 +241,34 @@ export default function TestimonialsPage() {
             {/* Image URLs Section */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Image URLs</Label>
+                <Label>Images</Label>
                 <Button type="button" variant="outline" size="sm" onClick={handleAddImageUrl}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Add Image URL
+                  Add Image
                 </Button>
               </div>
-              {formData.imageUrls.length === 0 && <p className="text-sm text-gray-500">No image URLs added yet</p>}
+              {formData.imageUrls.length === 0 && <p className="text-sm text-gray-500">No images added yet</p>}
               {formData.imageUrls.map((url, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input type="url" placeholder="https://example.com/image.jpg" value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveImageUrl(index)}>
-                    <X className="h-4 w-4 text-red-500" />
-                  </Button>
+                <div key={index} className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <Input type="url" placeholder="https://example.com/image.jpg" value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveImageUrl(index)}>
+                      <X className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="flex-1"
+                      disabled={!!uploading[index]}
+                      onChange={(e) => handleImageUpload(index, e.target.files?.[0])}
+                    />
+                    {uploading[index] && <Loader2 className="h-4 w-4 animate-spin text-gray-500" />}
+                  </div>
+                  {url && (
+                    <img src={url} alt={`Preview ${index + 1}`} className="h-20 w-20 object-cover rounded-md border" />
+                  )}
                 </div>
               ))}
             </div>
