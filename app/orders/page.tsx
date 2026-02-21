@@ -3,7 +3,7 @@
 import AdminLayout from "@/components/admin-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { IOrder } from "@/interfaces";
-import { DollarSign, Calendar, User, Loader2 } from "lucide-react";
+import { DollarSign, Calendar, User, Loader2, MapPin } from "lucide-react";
 import { useOrders } from "@/context/order";
 import { OrderService } from "@/services/order.service";
 import { useState } from "react";
@@ -54,6 +54,13 @@ export default function OrdersPage() {
     if (Number.isNaN(date.getTime())) return "-";
     return date.toLocaleDateString();
   };
+  console.log(orders);
+
+  const formatAddress = (address: any) => {
+    if (!address) return "-";
+    const parts = [address?.streetAddress || address?.city || address?.state || address?.pincode || address?.country].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "-";
+  };
 
   const updateOrderField = async (order: IOrder, key: "status" | "paymentStatus", value: string) => {
     if (!order._id || order[key] === value) return;
@@ -73,6 +80,8 @@ export default function OrdersPage() {
     setSavingOrderId(null);
   };
 
+  const address = (order: any) => `${order?.address?.streetAddress}  ${order?.address?.city} ${order?.address?.pincode + ", India"}`;
+  console.log(address(orders[0]));
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -91,7 +100,8 @@ export default function OrdersPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
@@ -102,6 +112,9 @@ export default function OrdersPage() {
               {orders.map((order: any) => (
                 <tr key={order._id || `${order.userId}-${order.paymentDate}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{String(order.user?.name)}</td>
+                  <td className="px-6 py-4 text-sm text-wrap text-gray-500 max-w-[200px]">
+                    <div title={address(order)}>{address(order)}</div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>{order.status}</span>
@@ -151,6 +164,10 @@ export default function OrdersPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <User className="h-4 w-4 text-gray-400" />
                   <span className="font-medium">{String(order.user?.name)}</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-gray-500">
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{address(order)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">Status</span>
